@@ -1,0 +1,4 @@
+---
+description: Homebrew Formula Archetype
+requires:
+  archetect: "3.0.0"

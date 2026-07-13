@@ -1,0 +1,64 @@
+name: Update Formula
+run-name: Update ${{ github.event.client_payload.binary }} to ${{ github.event.client_payload.version }}
+
+permissions: write-all
+
+concurrency:
+  group: update-formula
+
+on:
+  repository_dispatch:
+    types: [update-formula]
+
+jobs:
+  update-formula:
+    name: Update Formula
+    runs-on: ubuntu-latest
+    env:
+      ANSWERS: ${{ toJson(github.event.client_payload) }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate base formula
+        uses: archetect-actions/archetect-render@v1
+        with:
+          source: "archetype"
+          answers: $ANSWERS
+          # The archetype is now Lua (v3-only); pin the renderer to a v3 archetect.
+          version: "v3.0.0"
+
+      - name: Clean up old versions
+        run: |
+          BINARY="${{ github.event.client_payload.binary }}"
+
+          # Versioned formulas look like Formula/<binary>@X.Y.Z.rb. The major-line
+          # aliases (Formula/<binary>@N.rb) have no dot after the major and are
+          # intentionally excluded here so they're never pruned. Keep the newest 5
+          # versioned formulas *per major line* — a v3 release must not prune v2.
+          majors=$(ls Formula/${BINARY}@*.*.rb 2>/dev/null \
+            | sed -E "s#.*/${BINARY}@([0-9]+)\..*#\1#" \
+            | sort -un)
+
+          for major in $majors; do
+            ls Formula/${BINARY}@${major}.*.rb 2>/dev/null | \
+            sed "s#Formula/${BINARY}@\(.*\)\.rb#\1#" | \
+            sort -V -r | \
+            tail -n +6 | \
+            while read version; do
+              echo "Removing old formula: Formula/${BINARY}@${version}.rb"
+              rm -f "Formula/${BINARY}@${version}.rb"
+            done
+          done
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "github-actions@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No formula changes to commit"
+          else
+            git commit -m "Update ${{ github.event.client_payload.binary }} to ${{ github.event.client_payload.version }}"
+            git push
+          fi
