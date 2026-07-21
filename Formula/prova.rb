@@ -1,23 +1,23 @@
 class Prova < Formula
   desc "Prova"
   homepage "https://github.com/prova-rs/prova"
-  version "0.2.10"
+  version "0.3.0"
 
   on_linux do
     if Hardware::CPU.intel? && Hardware::CPU.is_64_bit?
-      url "https://github.com/prova-rs/prova/releases/download/v0.2.10/prova-v0.2.10-linux-x86_64.tar.gz"
-      sha256 "decc6c1a4ae6dc33289f9a4d79825644f3eca6ae69d0669329439a5d9c0ca632"
+      url "https://github.com/prova-rs/prova/releases/download/v0.3.0/prova-v0.3.0-linux-x86_64.tar.gz"
+      sha256 "716f9fd9363a3c63350353924c5f20d3eeac05f40993c4c9ab038eb8399c57cb"
     end
     if Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
-      url "https://github.com/prova-rs/prova/releases/download/v0.2.10/prova-v0.2.10-linux-arm64.tar.gz"
-      sha256 "46497c978c4c39524448f9ac45162aa4f10ab99a1987a8128b003c243230fa1e"
+      url "https://github.com/prova-rs/prova/releases/download/v0.3.0/prova-v0.3.0-linux-arm64.tar.gz"
+      sha256 "25dde9495324c80fd689845a7816c64064652e7e96dce2c217c5f1fa7b5092da"
     end
   end
 
   on_macos do
     if Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
-      url "https://github.com/prova-rs/prova/releases/download/v0.2.10/prova-v0.2.10-macos-arm64.tar.gz"
-      sha256 "a5f99109820595bbfc941cc18202b3227ea56b416006ed906cc1812d6d4aa7a9"
+      url "https://github.com/prova-rs/prova/releases/download/v0.3.0/prova-v0.3.0-macos-arm64.tar.gz"
+      sha256 "4190ba767c59cb8ad8f32be7b5b8a687cf7e437dcf6a7c522904bf9c49b3b045"
     end
   end
 
