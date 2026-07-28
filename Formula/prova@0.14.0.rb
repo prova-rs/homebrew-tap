@@ -1,4 +1,4 @@
-class Prova < Formula
+class ProvaAT0_14_0 < Formula
   desc "Prova"
   homepage "https://github.com/prova-rs/prova"
   version "0.14.0"
