@@ -51,6 +51,64 @@ jobs:
             done
           done
 
+      # The gate this tap did not have. It rendered formulae and pushed them without
+      # ever asking Homebrew whether they load, so `prova@X.Y.Z` shipped unloadable for
+      # four consecutive releases: the class name did not match the one Homebrew derives
+      # from the file name, and nothing on this path would have said so. `brew readall`
+      # is the cheap half (every formula in the tap must parse AND declare the class its
+      # file name implies); actually installing the pinned formula is the honest half.
+      #
+      # Runs BEFORE the commit on purpose — a formula that cannot install must not reach
+      # the tap at all, rather than be reverted after someone hits it.
+      - name: Verify the rendered formulae load and install
+        run: |
+          set -euo pipefail
+          BINARY="${{ github.event.client_payload.binary }}"
+          VERSION="${{ github.event.client_payload.version }}"
+
+          # Homebrew ships preinstalled on GitHub's ubuntu images. Deliberately not
+          # pulling in a setup action for this: a mutable third-party ref in the release
+          # path is a supply-chain cost, and the fallback below covers a missing PATH.
+          if ! command -v brew >/dev/null 2>&1; then
+            export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"
+          fi
+          export HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1
+
+          # Install the working tree as a real tap, so these are the same code paths a
+          # user hits — not a lint of the files in place. A tap placed by hand is
+          # untrusted (only `brew tap` confers trust), and Homebrew refuses to LOAD
+          # formulae from one, so trust it explicitly: this is our own tap, rendered by
+          # this job, being checked before we publish it.
+          TAP_DIR="$(brew --repository)/Library/Taps/prova-rs/homebrew-tap"
+          rm -rf "$TAP_DIR"
+          mkdir -p "$(dirname "$TAP_DIR")"
+          cp -R "$GITHUB_WORKSPACE" "$TAP_DIR"
+          brew trust prova-rs/tap
+
+          # Every formula must load. This is the assertion that catches a class name
+          # disagreeing with its file name, for the whole tap and not just this release.
+          brew readall prova-rs/tap
+
+          # ...and the formula this release actually rendered must install and run. The
+          # PINNED name is the right subject: `prova` and `prova@N` are deliberately not
+          # updated for prereleases or maintenance releases, so asserting on them would
+          # be asserting the wrong version on exactly those runs.
+          brew install "prova-rs/tap/${BINARY}@${VERSION}"
+
+          # Versioned formulae are not linked into the prefix, so ask Homebrew where the
+          # keg put the binary rather than assuming `$(brew --prefix)/bin`.
+          bin="$(brew list "prova-rs/tap/${BINARY}@${VERSION}" | grep -E "/bin/${BINARY}$" | head -1)"
+          if [ -z "$bin" ]; then
+            echo "::error::${BINARY}@${VERSION} installed but no bin/${BINARY} in the keg"
+            exit 1
+          fi
+          installed="$("$bin" --version | awk '{print $NF}')"
+          if [ "$installed" != "$VERSION" ]; then
+            echo "::error::installed ${BINARY} reports ${installed}, expected ${VERSION}"
+            exit 1
+          fi
+          echo "verified: brew install ${BINARY}@${VERSION} -> ${installed}"
+
       - name: Commit and push changes
         run: |
           git config --global user.name "GitHub Actions"

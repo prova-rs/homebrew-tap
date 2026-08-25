@@ -11,9 +11,27 @@ local function to_pascal(s)
 end
 
 context:set("class_name", to_pascal(context:get("binary")))                 -- e.g. Prova
--- Replace every non-alphanumeric (dots and prerelease hyphens) so the class name
--- is a valid Ruby identifier: "0.1.0-rc.1" -> "0_1_0_rc_1".
-context:set("class_version", (tostring(context:get("version")):gsub("[^%w]", "_"))) -- e.g. 0_1_0
+
+-- Homebrew does not accept any valid Ruby identifier here: it derives the class it
+-- expects from the FILE NAME and refuses the formula if the file declares a different
+-- one. That derivation is `Formulary.class_s` — each `[-_.\s]` is REMOVED and the
+-- character after it upcased, and `+` becomes `x`:
+--
+--   prova@0.26.1      -> ProvaAT0261
+--   prova@0.1.0-rc.1  -> ProvaAT010Rc1
+--   prova@0.26.0+dev  -> ProvaAT0260xdev
+--
+-- Replacing separators with `_` produced `ProvaAT0_26_1`, which is a perfectly valid
+-- identifier and the wrong one, so every pinned formula this archetype had ever
+-- rendered was unloadable: `brew install prova@0.26.1` failed with "Expected to find
+-- class ProvaAT0261", and `brew readall` failed for the whole tap. The main and
+-- major-line formulae (`prova`, `prova@0`) were unaffected — no separators to mangle —
+-- which is why four releases shipped before anyone noticed.
+local function class_version(version)
+  local s = (tostring(version):gsub("[-_.%s](%w)", function(c) return c:upper() end))
+  return (s:gsub("%+", "x"))
+end
+context:set("class_version", class_version(context:get("version")))         -- e.g. 0261
 
 -- Render the exact pinned formula (prova@X.Y.Z) for every release, including
 -- prereleases, so `brew install prova@0.1.0-rc.1` is possible.
