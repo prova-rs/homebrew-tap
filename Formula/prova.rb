@@ -1,7 +1,7 @@
 class Prova < Formula
   desc "Prova"
   homepage "https://github.com/prova-rs/prova"
-  version "0.30.13"
+  version "0.30.14"
 
   # Platform choice uses on_arm/on_intel, never `if Hardware::CPU.arm?`: Homebrew loads every
   # formula once per OS/arch it supports (brew readall), and only the on_* blocks follow that
@@ -9,26 +9,26 @@ class Prova < Formula
   # every simulated target without a URL and readall rejected the whole tap.
   on_macos do
     on_arm do
-      url "https://github.com/prova-rs/prova/releases/download/v0.30.13/prova-v0.30.13-macos-arm64.tar.gz"
-      sha256 "4c5f57cbffa737c08a01d70735bfe833557cf8f1d1ed57786bba765370d06d84"
+      url "https://github.com/prova-rs/prova/releases/download/v0.30.14/prova-v0.30.14-macos-arm64.tar.gz"
+      sha256 "8c11fea4aa85dcafdc23b4ac9eb168ddb8ee9e7b162a1c853e0472a3dd0bf904"
     end
     on_intel do
       # No Intel macOS build ships. The arm64 archive keeps the formula loadable on every
       # target; the arch requirement refuses the install instead of handing over that binary.
-      url "https://github.com/prova-rs/prova/releases/download/v0.30.13/prova-v0.30.13-macos-arm64.tar.gz"
-      sha256 "4c5f57cbffa737c08a01d70735bfe833557cf8f1d1ed57786bba765370d06d84"
+      url "https://github.com/prova-rs/prova/releases/download/v0.30.14/prova-v0.30.14-macos-arm64.tar.gz"
+      sha256 "8c11fea4aa85dcafdc23b4ac9eb168ddb8ee9e7b162a1c853e0472a3dd0bf904"
       depends_on arch: :arm64
     end
   end
 
   on_linux do
     on_intel do
-      url "https://github.com/prova-rs/prova/releases/download/v0.30.13/prova-v0.30.13-linux-x86_64.tar.gz"
-      sha256 "25c6914524aee03409d316c81af993ea6f0af21dce9df2c31e93e8562a826d86"
+      url "https://github.com/prova-rs/prova/releases/download/v0.30.14/prova-v0.30.14-linux-x86_64.tar.gz"
+      sha256 "cdde9cf89ad731d95efcdd58d553e3ce242b629bb1233a9862af603fd7649507"
     end
     on_arm do
-      url "https://github.com/prova-rs/prova/releases/download/v0.30.13/prova-v0.30.13-linux-arm64.tar.gz"
-      sha256 "ce6ee21f2b4af19bbe125b93df32a95e9b07c9b3324e7b8006c2f77b70bb7039"
+      url "https://github.com/prova-rs/prova/releases/download/v0.30.14/prova-v0.30.14-linux-arm64.tar.gz"
+      sha256 "5bd365df73a941347b4e42935d63890754f075deacd23b9826a0b23a71b41da0"
     end
   end
 
